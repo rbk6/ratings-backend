@@ -1,18 +1,9 @@
 // import db
 const db = require('../db')
 
-/**------------------- TODOs: --------------------*
-/** refactor to account for user specific ratings |
-/**    /:id -> getAllRatings -> use user_id       |
-/**    /:id/:rating_id -> getRating -> use both   |
-/**    /:id/:rating_id -> ...etc                  |
-/**                                               |
-/** fix db to increase rating_id for each user    | 
-/**                                               |
-/** implement error handling                      |
-/**--------------------------------------------**/
+/* TODO: implement error handling middleware */
 
-// get all ratings
+// get ratings of all users
 const getAllRatings = async (req, res) => {
   const query = {
     text: 'SELECT * FROM rating',
@@ -21,18 +12,35 @@ const getAllRatings = async (req, res) => {
   res.status(200).json(ratings.rows)
 }
 
-// get rating
-const getRating = async (req, res) => {
-  const { id } = req.params
+// get ratings of a particular user
+const getUserRatings = async (req, res) => {
+  const { id: userId } = req.params
   const query = {
-    text: 'SELECT * FROM rating WHERE rating_id = $1',
-    values: [id],
+    text: 'SELECT * FROM rating WHERE user_id = $1',
+    values: [userId],
+  }
+  const ratings = await db.query(query)
+  if (ratings.rowCount === 0) {
+    res.status(404).json({ msg: `No ratings found for user_id ${userId}` })
+  }
+  res.status(200).json(ratings.rows)
+}
+
+// get rating of a particular user
+const getUserRating = async (req, res) => {
+  const { id: userId, ratingId } = req.params
+  const query = {
+    text: 'SELECT * FROM rating WHERE user_id = $1 AND rating_id = $2',
+    values: [userId, ratingId],
   }
   const rating = await db.query(query)
   if (!rating) {
-    throw new Error(`No rating found with id ${id}`)
+    throw new Error(
+      `No rating from user_id ${userId} found with rating_id ${ratingId}`
+    )
+  } else {
+    return res.status(200).json(rating.rows[0])
   }
-  res.status(200).json(rating.rows[0])
 }
 
 // create rating
@@ -63,9 +71,9 @@ const createRating = async (req, res) => {
 
 // update rating
 const updateRating = async (req, res) => {
-  const { id } = req.params
-  const { user_rating, content, user_id } = req.body
-  if (!user_rating || !user_id) {
+  const { id: userId, ratingId } = req.params
+  const { user_rating, content } = req.body
+  if (!user_rating || !userId) {
     throw new Error(
       !user_rating
         ? 'User Rating field cannot be empty'
@@ -76,10 +84,16 @@ const updateRating = async (req, res) => {
     text:
       'UPDATE rating SET user_rating = $1, content = $2 ' +
       'WHERE rating_id = $3 AND user_id = $4',
-    values: [user_rating, content, id, user_id],
+    values: [user_rating, content, ratingId, userId],
   }
   try {
-    await db.query(query)
+    const rating = await db.query(query)
+    if (rating.rowCount === 0) {
+      return res.status(404).json({
+        status: 'failed',
+        msg: `No rating from user_id ${userId} found with rating_id ${ratingId}`,
+      })
+    }
     res.status(201).json({ status: 'success' })
   } catch (err) {
     res.status(400).json({ status: 'failed', msg: err })
@@ -88,21 +102,25 @@ const updateRating = async (req, res) => {
 
 // delete rating
 const deleteRating = async (req, res) => {
-  const { id } = req.params
+  const { id: userId, ratingId } = req.params
   const query = {
-    text: 'DELETE FROM rating WHERE rating_id = $1',
-    values: [id],
+    text: 'DELETE FROM rating WHERE user_id = $1 AND rating_id = $2',
+    values: [userId, ratingId],
   }
   const rating = await db.query(query)
   if (rating.rowCount === 0) {
-    throw new Error(`No rating found with id ${id}`)
+    return res.status(404).json({
+      status: 'failed',
+      msg: `No rating from user_id ${userId} found with rating_id ${ratingId}`,
+    })
   }
   res.status(200).json({ status: 'success' })
 }
 
 module.exports = {
   getAllRatings,
-  getRating,
+  getUserRatings,
+  getUserRating,
   createRating,
   updateRating,
   deleteRating,
