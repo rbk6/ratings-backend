@@ -3,7 +3,7 @@ const db = require('../db')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError } = require('../errors')
 
-/* todo: JWT integration, refresh/auth, tokenshash password, login */
+/* todo: JWT integration, refresh/auth tokens, hash password, login */
 
 const register = async (req, res) => {
   const { username, email, password, name } = req.body

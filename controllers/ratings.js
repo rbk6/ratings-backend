@@ -39,7 +39,7 @@ const getUserRating = async (req, res) => {
     throw new NotFoundError(
       `No rating from user_id ${userId} found with rating_id ${ratingId}`
     )
-  else return res.status(200).json({ data: rating.rows[0] })
+  return res.status(200).json({ data: rating.rows[0] })
 }
 
 // create rating
