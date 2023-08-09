@@ -1,15 +1,15 @@
-// import db
+// imports
 const db = require('../db')
-
-/* TODO: implement error handling middleware */
+const { StatusCodes } = require('http-status-codes')
+const { BadRequestError, NotFoundError, APIError } = require('../errors')
 
 // get ratings of all users
 const getAllRatings = async (req, res) => {
-  const query = {
-    text: 'SELECT * FROM rating',
-  }
+  const query = { text: 'SELECT * FROM rating' }
   const ratings = await db.query(query)
-  res.status(200).json(ratings.rows)
+  return res
+    .status(StatusCodes.OK)
+    .json({ ratingCount: ratings.rowCount, data: ratings.rows })
 }
 
 // get ratings of a particular user
@@ -20,10 +20,11 @@ const getUserRatings = async (req, res) => {
     values: [userId],
   }
   const ratings = await db.query(query)
-  if (ratings.rowCount === 0) {
-    res.status(404).json({ msg: `No ratings found for user_id ${userId}` })
-  }
-  res.status(200).json(ratings.rows)
+  if (ratings.rowCount === 0)
+    throw new NotFoundError(`No ratings found for user_id ${userId}`)
+  return res
+    .status(StatusCodes.OK)
+    .json({ ratingCount: ratings.rowCount, data: ratings.rows })
 }
 
 // get rating of a particular user
@@ -34,27 +35,24 @@ const getUserRating = async (req, res) => {
     values: [userId, ratingId],
   }
   const rating = await db.query(query)
-  if (!rating) {
-    throw new Error(
+  if (!rating || rating.rowCount === 0)
+    throw new NotFoundError(
       `No rating from user_id ${userId} found with rating_id ${ratingId}`
     )
-  } else {
-    return res.status(200).json(rating.rows[0])
-  }
+  else return res.status(200).json({ data: rating.rows[0] })
 }
 
 // create rating
 const createRating = async (req, res) => {
   const { title, user_rating, content, user_id, movie_id, show_id } = req.body
-  if (!title || !user_rating || !user_id || (!movie_id && !show_id)) {
-    throw new Error(
+  if (!title || !user_rating || !user_id || (!movie_id && !show_id))
+    throw new BadRequestError(
       !title || !user_rating
         ? 'Title or User Rating fields cannot be empty'
         : !user_id
         ? 'Unable to submit, user_id not defined'
         : 'Must provide movie_id or show_id'
     )
-  }
   const query = {
     text:
       'INSERT INTO rating(title, user_rating, content, user_id, movie_id,' +
@@ -63,9 +61,9 @@ const createRating = async (req, res) => {
   }
   try {
     await db.query(query)
-    res.status(201).json({ status: 'success' })
+    return res.status(StatusCodes.CREATED).json({ status: 'success' })
   } catch (err) {
-    res.status(400).json({ status: 'failed', msg: err })
+    throw new APIError()
   }
 }
 
@@ -88,15 +86,15 @@ const updateRating = async (req, res) => {
   }
   try {
     const rating = await db.query(query)
-    if (rating.rowCount === 0) {
-      return res.status(404).json({
-        status: 'failed',
-        msg: `No rating from user_id ${userId} found with rating_id ${ratingId}`,
-      })
-    }
-    res.status(201).json({ status: 'success' })
+    if (rating.rowCount === 0)
+      throw new NotFoundError(
+        `No rating from user_id ${userId} found with rating_id ${ratingId}`
+      )
+    return res.status(StatusCodes.OK).json({ status: 'success' })
   } catch (err) {
-    res.status(400).json({ status: 'failed', msg: err })
+    throw new NotFoundError(
+      `No rating from user_id ${userId} found with rating_id ${ratingId}`
+    )
   }
 }
 
@@ -108,13 +106,11 @@ const deleteRating = async (req, res) => {
     values: [userId, ratingId],
   }
   const rating = await db.query(query)
-  if (rating.rowCount === 0) {
-    return res.status(404).json({
-      status: 'failed',
-      msg: `No rating from user_id ${userId} found with rating_id ${ratingId}`,
-    })
-  }
-  res.status(200).json({ status: 'success' })
+  if (rating.rowCount === 0)
+    throw new NotFoundError(
+      `No rating from user_id ${userId} found with rating_id ${ratingId}`
+    )
+  return res.status(200).json({ status: 'success' })
 }
 
 module.exports = {
