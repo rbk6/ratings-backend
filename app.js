@@ -7,6 +7,7 @@ const errorHandler = require('./middleware/error-handler')
 
 // routers
 const authRouter = require('./routes/auth')
+const listRouter = require('./routes/list_items')
 const ratingRouter = require('./routes/ratings')
 const showRouter = require('./routes/shows')
 const movieRouter = require('./routes/movies')
@@ -18,6 +19,7 @@ app.use(express.json())
 app.use('/api/v1/ratings', ratingRouter)
 app.use('/api/v1/shows', showRouter)
 app.use('/api/v1/movies', movieRouter)
+app.use('/api/v1/listItems', listRouter)
 app.use('/api/v1/auth', authRouter)
 
 app.use(errorHandler)
