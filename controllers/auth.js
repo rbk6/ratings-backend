@@ -1,10 +1,9 @@
 // imports
 const db = require('../db')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError } = require('../errors')
-
-/* todo: JWT integration, refresh/auth tokens */
 
 const register = async (req, res) => {
   const { username, email, password, name } = req.body
@@ -32,7 +31,6 @@ const register = async (req, res) => {
 }
 
 const login = async (req, res) => {
-  // check if user exists
   const { username, password } = req.body
   const query = {
     text: 'SELECT * FROM "user" WHERE username = $1 LIMIT 1',
@@ -43,7 +41,8 @@ const login = async (req, res) => {
     if (!user || user.rowCount === 0)
       throw new BadRequestError('Invalid username/password, please try again.')
     if (await bcrypt.compare(password, user.rows[0].password)) {
-      res.json({ msg: 'Logged in successfully!' })
+      const accessToken = jwt.sign(username, process.env.ACCESS_TOKEN_SECRET)
+      res.json({ accessToken: accessToken })
     } else {
       res.json({ msg: 'Invalid username/password, please try again.' })
     }

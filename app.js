@@ -4,6 +4,7 @@ require('express-async-errors')
 const express = require('express')
 const app = express()
 const errorHandler = require('./middleware/error-handler')
+const authToken = require('./middleware/auth-token')
 
 // routers
 const authRouter = require('./routes/auth')
@@ -15,12 +16,15 @@ const movieRouter = require('./routes/movies')
 // middleware
 app.use(express.json())
 
+// user authentication
+app.use('/api/v1/auth', authRouter)
+app.use(authToken)
+
 // routes
 app.use('/api/v1/ratings', ratingRouter)
 app.use('/api/v1/shows', showRouter)
 app.use('/api/v1/movies', movieRouter)
 app.use('/api/v1/listItems', listRouter)
-app.use('/api/v1/auth', authRouter)
 
 app.use(errorHandler)
 
