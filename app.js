@@ -4,7 +4,7 @@ require('express-async-errors')
 const express = require('express')
 const app = express()
 const errorHandler = require('./middleware/error-handler')
-const authToken = require('./middleware/auth-token')
+const { checkAuth } = require('./middleware/auth-token')
 
 // routers
 const authRouter = require('./routes/auth')
@@ -18,7 +18,7 @@ app.use(express.json())
 
 // user authentication
 app.use('/api/v1/auth', authRouter)
-app.use(authToken)
+app.use(checkAuth)
 
 // routes
 app.use('/api/v1/ratings', ratingRouter)

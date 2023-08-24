@@ -1,7 +1,7 @@
 // imports
 const db = require('../db')
 const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
+const tokens = require('../middleware/auth-token')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError } = require('../errors')
 
@@ -41,15 +41,21 @@ const login = async (req, res) => {
     if (!user || user.rowCount === 0)
       throw new BadRequestError('Invalid username/password, please try again.')
     if (await bcrypt.compare(password, user.rows[0].password)) {
-      const accessToken = jwt.sign(username, process.env.ACCESS_TOKEN_SECRET)
-      res.json({ accessToken: accessToken })
+      const accessToken = tokens.generateAccessToken(username)
+      let refreshToken
+      const refreshTokenIsValid = await tokens.checkRefreshToken(username)
+      if (!refreshTokenIsValid || !refreshToken) {
+        refreshToken = await tokens.generateRefreshToken(username)
+      } else refreshToken = user.rows[0].refresh_token
+      if (refreshToken == null) res.status(401).json({ msg: 'Unauthorized' })
+      res.json({ accessToken: accessToken, refreshToken: refreshToken })
     } else {
       res.json({ msg: 'Invalid username/password, please try again.' })
     }
-  } catch {
-    res
-      .status(500)
-      .json({ msg: 'There was an error logging in, please try again.' })
+  } catch (err) {
+    res.status(500).json({
+      msg: 'There was an error logging in, please try again.',
+    })
   }
 }
 
