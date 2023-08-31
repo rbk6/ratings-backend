@@ -59,7 +59,28 @@ const login = async (req, res) => {
   }
 }
 
+const logout = async (req, res) => {
+  const { username } = req.body
+  const query = {
+    text:
+      'UPDATE "user" SET refresh_token = NULL, refresh_expiration = NULL ' +
+      'WHERE username = $1',
+    values: [username],
+  }
+  try {
+    await db.query(query)
+    return res
+      .status(StatusCodes.OK)
+      .json({ status: 'user has been logged out' })
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: 'An error occurred during logout.', err: err })
+  }
+}
+
 module.exports = {
   register,
   login,
+  logout,
 }
