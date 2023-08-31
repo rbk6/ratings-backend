@@ -1,11 +1,24 @@
 # Backend REST API for Ratings Web App
 
-Please note that the contents of this API are currently under development, and the specific functionalities are yet to be finalized. As a result, the focus of this repository is on the general structure and setup of the backend.
+Welcome to the Ratings Web App Backend repository! This repository contains the backend codebase for the Ratings Web App, which provides essential functionalities for managing user ratings, watchlists, and interactions with external APIs.
 
 ## Technologies Used
 
 - Backend: Node.js, Express.js
 - Database: PostgreSQL
+
+## Purpose and Features
+
+This REST API serves as the foundation for the Ratings Web App, providing essential functionalities for managing user ratings, watchlists, and interactions with external APIs. While the application is in the development phase, the backend is structured to accommodate forthcoming features such as user authentication, rating submissions, and watchlist management.
+
+## API Endpoints
+
+As the application evolves, it will feature the following API endpoints for interaction:
+
+- Authentication: Manage user registration, login, and logout.
+- Ratings: Allow users to submit and retrieve ratings for shows and movies.
+- Watchlist Management: Enable users to create, modify, and organize their watchlists.
+- External Data Integration: Interact with external APIs to gather shows and movie data.
 
 ## External APIs
 
