@@ -9,6 +9,7 @@ const helmet = require('helmet')
 const xss = require('xss-clean')
 const errorHandler = require('./middleware/error-handler')
 const { checkAuth } = require('./middleware/auth-token')
+const { setRateLimit } = require('./middleware/rate-limit')
 
 // routers
 const authRouter = require('./routes/auth')
@@ -16,6 +17,10 @@ const listRouter = require('./routes/list_items')
 const ratingRouter = require('./routes/ratings')
 const showRouter = require('./routes/shows')
 const movieRouter = require('./routes/movies')
+
+// rate limits
+const authLimiter = setRateLimit(15 * 60 * 1000, 10)
+const contentLimiter = setRateLimit(30 * 60 * 1000, 100)
 
 // middleware
 app.use(express.json())
@@ -25,14 +30,14 @@ app.use(helmet())
 app.use(xss())
 
 // user authentication
-app.use('/api/v1/auth', authRouter)
+app.use('/api/v1/auth', [authLimiter, authRouter])
 app.use(checkAuth)
 
 // routes
-app.use('/api/v1/ratings', ratingRouter)
-app.use('/api/v1/shows', showRouter)
-app.use('/api/v1/movies', movieRouter)
-app.use('/api/v1/listItems', listRouter)
+app.use('/api/v1/ratings', [contentLimiter, ratingRouter])
+app.use('/api/v1/shows', [contentLimiter, showRouter])
+app.use('/api/v1/movies', [contentLimiter, movieRouter])
+app.use('/api/v1/listItems', [contentLimiter, listRouter])
 
 app.use(errorHandler)
 
