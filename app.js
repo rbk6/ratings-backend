@@ -3,6 +3,10 @@ require('dotenv').config()
 require('express-async-errors')
 const express = require('express')
 const app = express()
+const compression = require('compression')
+const cors = require('cors')
+const helmet = require('helmet')
+const xss = require('xss-clean')
 const errorHandler = require('./middleware/error-handler')
 const { checkAuth } = require('./middleware/auth-token')
 
@@ -15,6 +19,10 @@ const movieRouter = require('./routes/movies')
 
 // middleware
 app.use(express.json())
+app.use(cors())
+app.use(compression())
+app.use(helmet())
+app.use(xss())
 
 // user authentication
 app.use('/api/v1/auth', authRouter)
