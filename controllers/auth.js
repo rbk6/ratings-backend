@@ -48,9 +48,11 @@ const login = async (req, res) => {
         refreshToken = await tokens.generateRefreshToken(username)
       } else refreshToken = user.rows[0].refresh_token
       if (refreshToken == null) res.status(401).json({ msg: 'Unauthorized' })
-      res.json({ accessToken: accessToken, refreshToken: refreshToken })
+      res.json({ accessToken: accessToken })
     } else {
-      res.json({ msg: 'Invalid username/password, please try again.' })
+      res
+        .status(400)
+        .json({ msg: 'Invalid username/password, please try again.' })
     }
   } catch (err) {
     res.status(500).json({
