@@ -1,6 +1,6 @@
-# Backend REST API for Ratings Web App
+<img src="./assets/eyerate-logo-type.png" alt="eyerate logo type" width=400 height=auto />
 
-Welcome to the Ratings Web App Backend repository! This repository contains the backend codebase for the Ratings Web App, which provides essential functionalities for managing user ratings, watchlists, and interactions with external APIs.
+Welcome to the EyeRate backend repository! This repository contains the backend codebase for the EyeRate web application, which provides essential functionalities for managing user ratings, watchlists, and interactions with external APIs.
 
 ## Technologies Used
 
