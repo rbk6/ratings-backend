@@ -20,7 +20,7 @@ const checkAuth = (req, res, next) => {
       const refreshTokenIsValid = await checkRefreshToken(user.username)
       if (refreshTokenIsValid) {
         const newAccessToken = generateAccessToken(user.username)
-        res.setHeader('Authorization', `Bearer ${newAccessToken}`)
+        return res.status(200).json({ accessToken: newAccessToken })
       } else {
         return res
           .status(401)
