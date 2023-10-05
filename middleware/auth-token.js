@@ -19,7 +19,7 @@ const checkAuth = (req, res, next) => {
     if (user.exp - currentTime < refreshThreshold) {
       const refreshTokenIsValid = await checkRefreshToken(user.username)
       if (refreshTokenIsValid) {
-        const newAccessToken = generateAccessToken(user.username)
+        const newAccessToken = generateAccessToken(user.username, user.id)
         return res.status(200).json({ accessToken: newAccessToken })
       } else {
         return res
@@ -50,8 +50,8 @@ async function checkRefreshToken(username) {
   return true
 }
 
-const generateAccessToken = (username) =>
-  jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, {
+const generateAccessToken = (username, id) =>
+  jwt.sign({ username, id }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: '30m',
   })
 
