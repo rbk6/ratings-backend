@@ -1,5 +1,6 @@
 // imports
 const db = require('../db')
+const jwt = require('jsonwebtoken')
 const { StatusCodes } = require('http-status-codes')
 const { BadRequestError, NotFoundError, APIError } = require('../errors')
 
@@ -44,24 +45,43 @@ const getUserRating = async (req, res) => {
 
 // create rating
 const createRating = async (req, res) => {
-  const { title, user_rating, content, user_id, movie_id, show_id } = req.body
-  if (!title || !user_rating || !user_id || (!movie_id && !show_id))
-    throw new BadRequestError(
-      !title || !user_rating
-        ? 'Title or User Rating fields cannot be empty'
-        : !user_id
-        ? 'Unable to submit, user_id not defined'
-        : 'Must provide movie_id or show_id'
-    )
-  const query = {
-    text:
-      'INSERT INTO rating(title, user_rating, content, user_id, movie_id,' +
-      ' show_id) VALUES($1, $2, $3, $4, $5, $6)',
-    values: [title, user_rating, content, user_id, movie_id, show_id],
-  }
   try {
-    await db.query(query)
-    return res.status(StatusCodes.CREATED).json({ status: 'success' })
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    const decodedToken = await jwt.verify(
+      token,
+      process.env.ACCESS_TOKEN_SECRET
+    )
+    const user_id = decodedToken.id
+    const { title, user_rating, content, movie_id, show_id } = req.body
+    if (!title || !user_rating || !user_id || (!movie_id && !show_id))
+      throw new BadRequestError(
+        !title || !user_rating
+          ? 'Title or User Rating fields cannot be empty'
+          : !user_id
+          ? 'Unable to submit, user_id not defined'
+          : 'Must provide movie_id or show_id'
+      )
+    const query = {
+      text:
+        'INSERT INTO rating(title, user_rating, content, user_id, movie_id,' +
+        ' show_id) VALUES($1, $2, $3, $4, $5, $6)',
+      values: [title, user_rating, content, user_id, movie_id, show_id],
+    }
+    try {
+      await db.query(query)
+      return res.status(StatusCodes.CREATED).json({ status: 'success' })
+    } catch (err) {
+      console.log()
+      if (err.message.includes('unique')) {
+        const id = err.detail.split('(')[2].split(')')[0].split(',')[0]
+        return res.status(StatusCodes.CONFLICT).json({
+          msg: `You already have a rating for ${title}, edit it in your profile.`,
+          id: id,
+        })
+      }
+      throw new APIError()
+    }
   } catch (err) {
     throw new APIError()
   }
