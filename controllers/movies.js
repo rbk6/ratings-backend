@@ -30,12 +30,12 @@ const getMovies = async (req, res) => {
     )
 
     const formattedResults = results.map(
-      ({ id, original_title, overview, release_date, poster_path }) => ({
+      ({ id, title, overview, release_date, poster_path }) => ({
         id: id,
-        title: original_title,
+        title: title,
         description: overview,
         releaseDate: release_date,
-        image: `https://image.tmdb.org/t/p/w500/${poster_path}`,
+        image: `https://image.tmdb.org/t/p/w500${poster_path}`,
       })
     )
 
