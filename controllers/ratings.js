@@ -53,7 +53,7 @@ const createRating = async (req, res) => {
       process.env.ACCESS_TOKEN_SECRET
     )
     const user_id = decodedToken.id
-    const { title, user_rating, content, movie_id, show_id } = req.body
+    const { title, user_rating, content, image, movie_id, show_id } = req.body
     if (!title || !user_rating || !user_id || (!movie_id && !show_id))
       throw new BadRequestError(
         !title || !user_rating
@@ -65,19 +65,22 @@ const createRating = async (req, res) => {
     const query = {
       text:
         'INSERT INTO rating(title, user_rating, content, user_id, movie_id,' +
-        ' show_id) VALUES($1, $2, $3, $4, $5, $6)',
-      values: [title, user_rating, content, user_id, movie_id, show_id],
+        ' show_id, image) VALUES($1, $2, $3, $4, $5, $6, $7)',
+      values: [title, user_rating, content, user_id, movie_id, show_id, image],
     }
     try {
       await db.query(query)
       return res.status(StatusCodes.CREATED).json({ status: 'success' })
     } catch (err) {
-      console.log()
       if (err.message.includes('unique')) {
         const id = err.detail.split('(')[2].split(')')[0].split(',')[0]
         return res.status(StatusCodes.CONFLICT).json({
           msg: `You already have a rating for ${title}, edit it in your profile.`,
           id: id,
+        })
+      } else if (err.message.includes('varying(500)')) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          msg: 'Your description cannot exceed 500 characters.',
         })
       }
       throw new APIError()
