@@ -39,7 +39,9 @@ const login = async (req, res) => {
   try {
     const user = await db.query(query)
     if (!user || user.rowCount === 0)
-      throw new BadRequestError('Invalid username/password, please try again.')
+      return res
+        .status(400)
+        .json({ msg: 'Invalid username/password, please try again.' })
     if (await bcrypt.compare(password, user.rows[0].password)) {
       const accessToken = tokens.generateAccessToken(username, user.rows[0].id)
       let refreshToken
