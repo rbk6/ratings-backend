@@ -14,7 +14,7 @@ const {
 router.route('/').post(createRating).get(getAllRatings, handleCache(300))
 router.route('/:id').get(getUserRatings, handleCache(300))
 router
-  .route('/:id/:ratingId')
+  .route('/:id/:contentId')
   .get(getUserRating, handleCache(300))
   .patch(updateRating)
   .delete(deleteRating)
