@@ -22,20 +22,22 @@ const getListItems = async (req, res) => {
 
 // add list item
 const addListItem = async (req, res) => {
-  const { user_id, movie_id, show_id, list_name, image_url } = req.body
-  if (!list_name || !user_id || (!movie_id && !show_id))
+  const { user_id, content_id, list_name, title, image } = req.body
+  if (!list_name || !user_id || !content_id)
     throw new BadRequestError(
-      !list_name
+      !title
+        ? 'Title field cannot be empty'
+        : !list_name
         ? 'List name field cannot be empty'
         : !user_id
         ? 'Unable to submit, user_id not defined'
-        : 'Must provide movie_id or show_id'
+        : 'Must provide content_id'
     )
   const query = {
     text:
-      'INSERT INTO list_item(user_id, movie_id, show_id, list_name, image_url) ' +
+      'INSERT INTO list_item(user_id, content_id, list_name, title, image) ' +
       'VALUES($1, $2, $3, $4, $5)',
-    values: [user_id, movie_id, show_id, list_name, image_url],
+    values: [user_id, content_id, list_name, title, image],
   }
   try {
     await db.query(query)
@@ -49,16 +51,11 @@ const addListItem = async (req, res) => {
 
 // remove list item
 const removeListItem = async (req, res) => {
-  const { user_id, list_name, movie_id, show_id } = req.body
-  const query = movie_id
-    ? {
-        text: 'DELETE FROM list_item WHERE user_id = $1 AND list_name = $2 AND movie_id = $3',
-        values: [user_id, list_name, movie_id],
-      }
-    : {
-        text: 'DELETE FROM list_item WHERE user_id = $1 AND list_name = $2 AND show_id = $3',
-        values: [user_id, list_name, show_id],
-      }
+  const { user_id, list_name, content_id } = req.body
+  const query = {
+    text: 'DELETE FROM list_item WHERE user_id = $1 AND list_name = $2 AND content_id = $3',
+    values: [user_id, list_name, content_id],
+  }
   const list_item = await db.query(query)
   if (list_item.rowCount === 0)
     throw new NotFoundError(
@@ -71,7 +68,10 @@ const removeListItem = async (req, res) => {
 const getLists = async (req, res) => {
   const { id: userId } = req.params
   const query = {
-    text: 'SELECT DISTINCT list_name FROM list_item WHERE user_id = $1',
+    text:
+      `SELECT list_name, ARRAY_AGG(jsonb_build_object('title', title, ` +
+      `'image', image, 'content_id', content_id)) AS list_items FROM list_item WHERE ` +
+      `user_id = $1 GROUP BY list_name LIMIT 3`,
     values: [userId],
   }
   const lists = await db.query(query)
