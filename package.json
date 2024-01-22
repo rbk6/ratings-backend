@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.1",
     "moment": "^2.29.4",
     "node-cache": "^5.1.2",
+    "npm": "^10.3.0",
     "pg": "^8.11.2",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.32.1",
